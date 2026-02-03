@@ -1,8 +1,17 @@
-from google import genai
+try:
+    from google import genai
+except ImportError:
+    genai = None
+
 import streamlit as st
 
 # Create Gemini client (NEW SDK)
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+def generate_ai_summary(text):
+    if genai is None:
+        return "AI summary disabled in cloud demo."
+    
+    # existing AI logic
 
 def generate_ai_summary(payload: dict) -> str:
     prompt = f"""
