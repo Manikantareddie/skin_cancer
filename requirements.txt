@@ -11,3 +11,4 @@ pytz
 PyWavelets
 reportlab
 requests
+gdown

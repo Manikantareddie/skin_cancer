@@ -6,6 +6,7 @@ import streamlit as st
 import torch
 import os
 import uuid
+import gdown
 import requests
 
 from PIL import Image
@@ -133,19 +134,20 @@ p, li {
 </style>
 """, unsafe_allow_html=True)
 
+
+
 def download_model_from_drive():
     model_path = "final_cnn_texture_model.pth"
 
     if os.path.exists(model_path):
         return
 
-    url = "https://drive.google.com/uc?id=1myhL5uMLejpG_k2zK86-uI9csiGc-E5m"
+    file_id = "1myhL5uMLejpG_k2zK86-uI9csiGc-E5m"
+    url = f"https://drive.google.com/uc?id={file_id}"
 
     with st.spinner("⬇️ Downloading AI model weights (first run only)..."):
-        response = requests.get(url)
-        response.raise_for_status()
-        with open(model_path, "wb") as f:
-            f.write(response.content)
+        gdown.download(url, model_path, quiet=False)
+
 
 
 # ============================================================
@@ -153,13 +155,9 @@ def download_model_from_drive():
 # ============================================================
 @st.cache_resource
 def load_model():
-    download_model_from_drive()   # 👈 ADD THIS LINE
+    download_model_from_drive()
 
     model_path = "final_cnn_texture_model.pth"
-
-    if not os.path.exists(model_path):
-        st.warning("⚠️ Model weights could not be loaded.")
-        return None
 
     model = CNNWithTexture()
     model.load_state_dict(
@@ -167,6 +165,7 @@ def load_model():
     )
     model.eval()
     return model
+
 
 
 model = load_model()
