@@ -137,17 +137,26 @@ p, li {
 # ============================================================
 @st.cache_resource
 def load_model():
+    model_path = "final_cnn_texture_model.pth"
+
+    if not os.path.exists(model_path):
+        st.warning("⚠️ Model weights not available in cloud deployment.")
+        return None
+
     model = CNNWithTexture()
     model.load_state_dict(
-        torch.load("final_cnn_texture_model.pth", map_location="cpu")
+        torch.load(model_path, map_location="cpu")
     )
     model.eval()
     return model
 
+
 model = load_model()
 
-# Grad-CAM targets last convolution layer
-gradcam = GradCAM(model, model.cnn[-3])
+gradcam = None
+if model is not None:
+    gradcam = GradCAM(model, model.cnn[-3])
+
 
 # ============================================================
 # HEADER
@@ -241,6 +250,10 @@ if uploaded_file is not None:
     image_tensor = preprocess_image(image)
     texture_tensor = extract_texture_features(image)
 
+    if model is None:
+        st.info("🔬 Model inference is disabled in cloud demo.")
+        st.stop()
+
     with torch.no_grad():
         outputs = model(image_tensor, texture_tensor)
         probs = torch.softmax(outputs, dim=1)
@@ -258,18 +271,20 @@ if uploaded_file is not None:
     # ========================================================
     # GRAD-CAM (EXPLAINABILITY)
     # ========================================================
-    cam = gradcam.generate(image_tensor, texture_tensor)
-    heatmap_overlay = overlay_heatmap_on_image(image, cam)
+    if gradcam is not None:
+        cam = gradcam.generate(image_tensor, texture_tensor)
+        heatmap_overlay = overlay_heatmap_on_image(image, cam)
+        heatmap_pil = Image.fromarray(heatmap_overlay)
 
-    # 🔧 FIX: convert NumPy heatmap → PIL Image (NO LOGIC CHANGE)
-    heatmap_pil = Image.fromarray(heatmap_overlay)
+        st.markdown("### 🔥 Explainable AI – Attention Heatmap")
+        st.image(
+            heatmap_pil,
+            caption="Regions influencing the AI decision",
+            width=420
+        )
+    else:
+     st.info("🧠 Explainable AI unavailable in cloud demo.")
 
-    st.markdown("### 🔥 Explainable AI – Attention Heatmap")
-    st.image(
-        heatmap_pil,
-        caption="Regions influencing the AI decision",
-        width=420
-    )
 
 
     # ========================================================
