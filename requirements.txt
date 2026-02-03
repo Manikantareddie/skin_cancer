@@ -10,3 +10,4 @@ matplotlib
 pytz
 PyWavelets
 reportlab
+requests

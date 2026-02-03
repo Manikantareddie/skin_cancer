@@ -2,12 +2,15 @@
 # AI SKIN CANCER DETECTION SYSTEM
 # Final Year Project | AI & Data Science
 # ============================================================
-
 import streamlit as st
 import torch
 import os
 import uuid
+import requests
+
 from PIL import Image
+
+
 
 # ---------------- AI & MODEL IMPORTS ----------------
 from model import CNNWithTexture
@@ -130,6 +133,19 @@ p, li {
 </style>
 """, unsafe_allow_html=True)
 
+def download_model_from_drive():
+    model_path = "final_cnn_texture_model.pth"
+
+    if os.path.exists(model_path):
+        return
+
+    url = "https://drive.google.com/uc?id=1myhL5uMLejpG_k2zK86-uI9csiGc-E5m"
+
+    with st.spinner("⬇️ Downloading AI model weights (first run only)..."):
+        response = requests.get(url)
+        response.raise_for_status()
+        with open(model_path, "wb") as f:
+            f.write(response.content)
 
 
 # ============================================================
@@ -137,10 +153,12 @@ p, li {
 # ============================================================
 @st.cache_resource
 def load_model():
+    download_model_from_drive()   # 👈 ADD THIS LINE
+
     model_path = "final_cnn_texture_model.pth"
 
     if not os.path.exists(model_path):
-        st.warning("⚠️ Model weights not available in cloud deployment.")
+        st.warning("⚠️ Model weights could not be loaded.")
         return None
 
     model = CNNWithTexture()
